@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokémon Battle</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
+  .battle-container {
+    text-align: center;
+    padding: 10px;
+    border: 2px solid #333;
+    border-radius: 10px;
+    background-color: #fff;
+    width: 90%; /* Adjust width as needed */
+    max-width: 400px; /* Maximum width to maintain readability */
+  }
+  .pokemon-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+  .pokemon {
+    margin: 10px;
+  }
+  .pokemon img {
+    width: 120px;
+    height: auto;
+    transition: transform 0.2s;
+  }
+  .health-bar {
+    border: 2px solid black;
+    width: 120px;
+    height: 15px;
+    background-color: lightgreen;
+    margin-top: 5px;
+  }
+  .battle-info {
+    margin-top: 20px;
+    font-size: 16px;
+  }
+  .battle-controls {
+    margin-top: 20px;
+  }
+  button {
+    padding: 8px 16px;
+    font-size: 14px;
+    margin: 0 5px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="battle-container">
+    <h2>Trainer: Harshit</h2>
+    <div class="pokemon-container">
+      <div class="pokemon" id="playerPokemon">
+        <p>You</p>
+        <img src="charmander.png" alt="Charmander" id="playerImg">
+        <div class="health-bar" id="playerHealthBar"></div>
+      </div>
+
+      <div class="pokemon" id="opponentPokemon">
+        <h2>Opponent: Pikachu</h2>
+        <img src="pikachu.png" alt="Pikachu" id="opponentImg">
+        <div class="health-bar" id="opponentHealthBar"></div>
+      </div>
+    </div>
+
+    <div class="battle-info">
+      <p id="attackInfo"></p>
+    </div>
+
+    <div class="battle-controls">
+      <button id="tackleBtn" onclick="attack('Tackle')">Tackle</button>
+      <button id="emberBtn" onclick="attack('Ember')">Ember</button>
+      <button id="biteBtn" onclick="attack('Bite')">Bite</button>
+      <button id="growlBtn" onclick="attack('Growl')">Growl</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let playerHealth = 50;
+  let opponentHealth = 50;
+  let isPlayerTurn = true;
+  let isAttackOptionsVisible = true;
+
+  function attack(move) {
+    if (!isPlayerTurn || !isAttackOptionsVisible) return; // Only allow player to attack when it's their turn and attack options are visible
+    const damage = calculateDamage(move);
+    opponentHealth -= damage;
+    shake('opponentImg');
+    showAttackInfo(`You used ${move}`);
+
+    updateHealthBars();
+    checkEndGame();
+
+    isPlayerTurn = false; // Switch turn to opponent (Pikachu)
+    hideAttackOptions();
+    setTimeout(pikachuAttack, 2500); // Delay Pikachu's attack by 2.5 seconds
+  }
+
+  function pikachuAttack() {
+    if (opponentHealth <= 0) return; // Check if opponent is already defeated
+    const random = Math.random();
+    let opponentMove;
+    if (random < 0.75) {
+      opponentMove = 'Missed';
+      shake('playerImg');
+      showAttackInfo("Pikachu's attack missed");
+    } else {
+      opponentMove = getRandomAttack();
+      const damage = calculateDamage(opponentMove);
+      playerHealth -= damage;
+      shake('playerImg');
+      showAttackInfo(`Pikachu used ${opponentMove}`);
+    }
+
+    updateHealthBars();
+    checkEndGame();
+
+    isPlayerTurn = true; // Switch turn back to player
+    setTimeout(showAttackOptions, 2500); // Show attack options after 2.5 seconds
+  }
+
+  function calculateDamage(move) {
+    switch (move) {
+      case 'Tackle':
+        return 15;
+      case 'Ember':
+        return 15;
+      case 'Bite':
+        return 15;
+      case 'Growl':
+        return 0; // Growl does not deal damage
+      default:
+        return 0;
+    }
+  }
+
+  function updateHealthBars() {
+    document.getElementById('playerHealthBar').style.width = `${playerHealth * 2}px`;
+    document.getElementById('opponentHealthBar').style.width = `${opponentHealth * 2}px`;
+  }
+
+  function checkEndGame() {
+    if (playerHealth <= 0) {
+      alert('You lose!');
+      resetGame();
+    } else if (opponentHealth <= 0) {
+      alert('You win!');
+      resetGame();
+    }
+  }
+
+  function shake(elementId) {
+    const img = document.getElementById(elementId);
+    img.style.transform = 'translateX(10px)';
+    setTimeout(() => {
+      img.style.transform = 'translateX(-10px)';
+      setTimeout(() => {
+        img.style.transform = 'translateX(0)';
+      }, 100);
+    }, 100);
+  }
+
+  function resetGame() {
+    playerHealth = 50;
+    opponentHealth = 50;
+    updateHealthBars();
+    document.getElementById('attackInfo').innerText = '';
+    isPlayerTurn = true; // Reset turn to player
+    showAttackOptions();
+  }
+
+  function getRandomAttack() {
+    const attacks = ['Thunder', 'Thunder Ball', 'Quick Attack'];
+    return attacks[Math.floor(Math.random() * attacks.length)];
+  }
+
+  function showAttackInfo(text) {
+    const attackInfo = document.getElementById('attackInfo');
+    attackInfo.innerText = '';
+    let index = 0;
+    const typingInterval = setInterval(() => {
+      if(text[index] == ' ') attackInfo.innerText += '\u00A0';
+      else attackInfo.innerText += text[index];
+      index++;
+      if (index >= text.length) {
+        clearInterval(typingInterval);
+        setTimeout(() => {
+          attackInfo.innerText = '';
+        }, 1000); // Hide the attack info after 1 second
+      }
+    }, 50); // Typing speed: 50 milliseconds per character
+  }
+
+  function hideAttackOptions() {
+    const buttons = document.querySelectorAll('.battle-controls button');
+    buttons.forEach(button => {
+      button.disabled = true;
+    });
+    isAttackOptionsVisible = false;
+  }
+
+  function showAttackOptions() {
+    const buttons = document.querySelectorAll('.battle-controls button');
+    buttons.forEach(button => {
+      button.disabled = false;
+    });
+    isAttackOptionsVisible = true;
+  }
+</script>
+
+</body>
+</html>
